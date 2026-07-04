@@ -1,6 +1,6 @@
 # Weather Suite
 
-**Author: Anil Thomas**
+**Author: James Paek**
 
 Three weather projects in one repository, covering **all three PM Accelerator
 technical assessments**, sharing a design sensibility and a single free, keyless

@@ -4,7 +4,7 @@
  * 👉 EDIT THIS: put your own name here. It appears in the app footer,
  *    which the assessment asks you to include.
  */
-export const AUTHOR_NAME = "Anil Thomas";
+export const AUTHOR_NAME = "James Paek";
 
 export const APP_NAME = "Skyline";
 
