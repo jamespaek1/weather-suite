@@ -1,0 +1,20 @@
+{
+  "name": "weather-suite-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tech Assessment #2 - Weather backend: CRUD over SQLite, RESTful API with location + date-range validation, extra API integrations (Wikipedia, maps, air quality), and exports to JSON/CSV/XML/Markdown/PDF.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.21.1",
+    "pdfkit": "^0.15.0"
+  }
+}

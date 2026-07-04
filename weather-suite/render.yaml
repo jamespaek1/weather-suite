@@ -1,0 +1,26 @@
+# Render Blueprint — deploys both apps from this repo.
+# In Render: New + → Blueprint → point at this repository.
+services:
+  # Backend API + test console (Node/Express + SQLite on a persistent disk)
+  - type: web
+    name: weather-suite-backend
+    runtime: node
+    rootDir: backend
+    plan: starter # persistent disks require a paid instance; use 'free' without the disk (data resets on deploy)
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: weather-db
+      mountPath: /var/data
+      sizeGB: 1
+
+  # Frontend (static Vite build)
+  - type: web
+    name: weather-suite-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist

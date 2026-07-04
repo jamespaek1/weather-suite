@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Suite — Backend Console</title>
+    <style>
+      :root {
+        --bg: #0f1622;
+        --panel: #18212f;
+        --panel-2: #1f2a3a;
+        --line: #2b3850;
+        --ink: #e9eef6;
+        --soft: #9aa9bf;
+        --accent: #6fb0e6;
+        --accent-warm: #ffb454;
+        --danger: #e07a7a;
+        --radius: 12px;
+        --mono: ui-monospace, "SF Mono", Menlo, monospace;
+        --sans: "Inter", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background: radial-gradient(1200px 600px at 80% -10%, #1c2740, var(--bg));
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      header {
+        padding: 1.5rem clamp(1rem, 4vw, 3rem);
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 { margin: 0; font-size: 1.35rem; letter-spacing: -0.01em; }
+      header p { margin: 0.35rem 0 0; color: var(--soft); font-size: 0.9rem; }
+      header code { font-family: var(--mono); color: var(--accent); }
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: clamp(1rem, 4vw, 2rem);
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+      @media (min-width: 860px) { main { grid-template-columns: 380px 1fr; align-items: start; } }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+      }
+      h2 { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--soft); margin: 0 0 1rem; }
+      label { display: block; font-size: 0.8rem; color: var(--soft); margin: 0.8rem 0 0.3rem; }
+      input, select, textarea {
+        width: 100%;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        color: var(--ink);
+        border-radius: 9px;
+        padding: 0.6rem 0.7rem;
+        font-family: var(--sans);
+        font-size: 0.95rem;
+      }
+      textarea { resize: vertical; min-height: 56px; }
+      input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .row { display: flex; gap: 0.6rem; }
+      .row > div { flex: 1; }
+      button {
+        font-family: var(--sans);
+        font-weight: 600;
+        border: 0;
+        border-radius: 9px;
+        padding: 0.6rem 0.95rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+      .btn-primary { background: var(--accent); color: #08111d; width: 100%; margin-top: 1rem; }
+      .btn-primary:disabled { opacity: 0.6; cursor: progress; }
+      .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+      .btn-danger { background: transparent; color: var(--danger); border: 1px solid #4a2c33; }
+      .msg { margin-top: 0.8rem; font-size: 0.85rem; padding: 0.6rem 0.75rem; border-radius: 8px; display: none; }
+      .msg.error { display: block; background: #3a2026; color: #f0b4b4; border: 1px solid #5a2c34; }
+      .msg.ok { display: block; background: #16302a; color: #9fe0c4; border: 1px solid #234b3f; }
+
+      .qlist { display: flex; flex-direction: column; gap: 0.6rem; }
+      .qitem {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.8rem 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.6rem;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+      }
+      .qitem:hover { border-color: var(--accent); }
+      .qitem .name { font-weight: 600; }
+      .qitem .sub { font-family: var(--mono); font-size: 0.76rem; color: var(--soft); margin-top: 0.2rem; }
+      .empty { color: var(--soft); font-size: 0.9rem; }
+
+      .detail h3 { font-family: var(--sans); font-size: 1.4rem; margin: 0 0 0.2rem; }
+      .detail .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--soft); margin-bottom: 1rem; }
+      .detail iframe { width: 100%; height: 220px; border: 1px solid var(--line); border-radius: 10px; background: #0a0f17; }
+      .wiki { font-size: 0.9rem; color: #cdd8e8; line-height: 1.55; margin: 1rem 0; }
+      .exports { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 1rem 0; }
+      .exports a {
+        font-family: var(--mono); font-size: 0.78rem; text-decoration: none;
+        background: var(--panel-2); border: 1px solid var(--line); color: var(--accent);
+        padding: 0.4rem 0.7rem; border-radius: 999px;
+      }
+      .exports a:hover { border-color: var(--accent); }
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+      th, td { text-align: left; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--line); }
+      th { color: var(--soft); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+      td.num, th.num { text-align: right; font-family: var(--mono); }
+      .detail-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Weather Suite — Backend Console</h1>
+      <p>
+        A test client for the REST API. CRUD over SQLite, location + date-range validation,
+        Wikipedia/maps enrichment, and exports. API base: <code>/api</code>
+      </p>
+      <p style="margin-top:0.5rem;color:var(--soft);font-size:0.85rem">
+        Built by <strong style="color:var(--ink)">Anil Thomas</strong>
+      </p>
+    </header>
+
+    <main>
+      <section class="card" aria-label="Create a weather query">
+        <h2>New query</h2>
+        <label for="location">Location (city, landmark, or "lat, lon")</label>
+        <input id="location" list="geo" autocomplete="off" placeholder="e.g. Lisbon" />
+        <datalist id="geo"></datalist>
+
+        <div class="row">
+          <div>
+            <label for="start">Start date</label>
+            <input id="start" type="date" />
+          </div>
+          <div>
+            <label for="end">End date</label>
+            <input id="end" type="date" />
+          </div>
+        </div>
+
+        <label for="units">Units</label>
+        <select id="units">
+          <option value="metric">Metric (°C, km/h, mm)</option>
+          <option value="imperial">Imperial (°F, mph, in)</option>
+        </select>
+
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" placeholder="Why are you looking this up?"></textarea>
+
+        <button class="btn-primary" id="create">Save query</button>
+        <div class="msg" id="formMsg"></div>
+      </section>
+
+      <section class="card" aria-label="Saved queries and detail">
+        <h2>Saved queries</h2>
+        <div class="qlist" id="list"><p class="empty">Loading…</p></div>
+        <div id="detail" class="detail" style="margin-top: 1.5rem"></div>
+      </section>
+    </main>
+
+    <footer style="max-width:1080px;margin:0 auto;padding:1.5rem clamp(1rem,4vw,2rem) 3rem;border-top:1px solid var(--line);color:var(--soft);font-size:0.85rem;line-height:1.55">
+      <strong style="color:var(--ink)">About the Product Manager Accelerator (PMA)</strong>
+      <p style="margin:0.5rem 0 0">
+        The Product Manager Accelerator is a professional-development program that helps
+        aspiring and experienced product managers break into and grow in (AI) product
+        management. Through hands-on cohorts, students work alongside engineers, designers,
+        and data scientists to build and launch real AI products from 0 to 1 — backed by
+        mentorship, an active alumni network, and a strong track record of placing graduates
+        at top tech companies and startups.
+        <a href="https://www.linkedin.com/school/pmaccelerator/" target="_blank" rel="noreferrer" style="color:var(--accent)">LinkedIn ↗</a>
+      </p>
+    </footer>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const API = "/api";
+
+      // Default the date range to the next 5 days.
+      const today = new Date();
+      const iso = (d) => d.toISOString().slice(0, 10);
+      $("start").value = iso(today);
+      const plus4 = new Date(today);
+      plus4.setDate(plus4.getDate() + 4);
+      $("end").value = iso(plus4);
+
+      // --- geocode autocomplete (debounced) ---
+      let geoTimer;
+      $("location").addEventListener("input", (e) => {
+        const q = e.target.value.trim();
+        clearTimeout(geoTimer);
+        if (q.length < 2) return;
+        geoTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(`${API}/geocode?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            $("geo").innerHTML = (data.results || [])
+              .map((r) => `<option value="${r.name}">${r.name} — ${r.region}</option>`)
+              .join("");
+          } catch {}
+        }, 300);
+      });
+
+      function showMsg(el, text, kind) {
+        el.textContent = text;
+        el.className = "msg " + kind;
+      }
+
+      // --- create ---
+      $("create").addEventListener("click", async () => {
+        const body = {
+          location: $("location").value,
+          startDate: $("start").value,
+          endDate: $("end").value,
+          units: $("units").value,
+          notes: $("notes").value,
+        };
+        const btn = $("create");
+        btn.disabled = true;
+        btn.textContent = "Saving…";
+        try {
+          const res = await fetch(`${API}/queries`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Request failed");
+          showMsg($("formMsg"), `Saved “${data.resolvedName}” (${data.weather.days.length} days).`, "ok");
+          $("notes").value = "";
+          await loadList();
+          viewQuery(data.id);
+        } catch (err) {
+          showMsg($("formMsg"), err.message, "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Save query";
+        }
+      });
+
+      // --- list ---
+      async function loadList() {
+        const res = await fetch(`${API}/queries`);
+        const data = await res.json();
+        const list = $("list");
+        if (!data.records.length) {
+          list.innerHTML = '<p class="empty">No saved queries yet. Create one on the left.</p>';
+          return;
+        }
+        list.innerHTML = data.records
+          .map(
+            (r) => `
+          <div class="qitem" data-id="${r.id}">
+            <div>
+              <div class="name">${r.resolvedName || r.locationInput}</div>
+              <div class="sub">${r.startDate} → ${r.endDate} · ${r.days}d · ${r.source}</div>
+            </div>
+            <button class="btn-danger" data-del="${r.id}">Delete</button>
+          </div>`
+          )
+          .join("");
+
+        list.querySelectorAll(".qitem").forEach((el) => {
+          el.addEventListener("click", (e) => {
+            if (e.target.dataset.del) return;
+            viewQuery(Number(el.dataset.id));
+          });
+        });
+        list.querySelectorAll("[data-del]").forEach((b) => {
+          b.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await fetch(`${API}/queries/${b.dataset.del}`, { method: "DELETE" });
+            $("detail").innerHTML = "";
+            loadList();
+          });
+        });
+      }
+
+      // --- detail ---
+      async function viewQuery(id) {
+        const res = await fetch(`${API}/queries/${id}`);
+        const r = await res.json();
+        if (!res.ok) return;
+        const u = r.weather?.units === "imperial" ? "°F" : "°C";
+        const wiki = r.extras?.wikipedia;
+        const map = r.extras?.map;
+        const rows = (r.weather?.days || [])
+          .map(
+            (d) => `<tr>
+              <td>${d.date}</td>
+              <td>${codeLabel(d.weatherCode)}</td>
+              <td class="num">${fmt(d.tempMax)}</td>
+              <td class="num">${fmt(d.tempMin)}</td>
+              <td class="num">${fmt(d.precipSum)}</td>
+            </tr>`
+          )
+          .join("");
+
+        $("detail").innerHTML = `
+          <h3>${r.resolvedName || r.locationInput}</h3>
+          <div class="meta">${r.region || ""} · ${r.latitude}, ${r.longitude} · ${r.startDate} → ${r.endDate} · ${r.source}</div>
+          ${map ? `<iframe loading="lazy" src="${map.osmEmbed}" title="Map"></iframe>` : ""}
+          ${wiki?.extract ? `<p class="wiki">${wiki.extract} ${wiki.url ? `<a href="${wiki.url}" target="_blank" rel="noreferrer">Wikipedia ↗</a>` : ""}</p>` : ""}
+          <div class="exports">
+            <strong style="color:var(--soft);font-size:.78rem;align-self:center">Export:</strong>
+            <a href="${API}/queries/${id}/export?format=json&download=0" target="_blank">JSON</a>
+            <a href="${API}/queries/${id}/export?format=csv">CSV</a>
+            <a href="${API}/queries/${id}/export?format=xml&download=0" target="_blank">XML</a>
+            <a href="${API}/queries/${id}/export?format=md&download=0" target="_blank">Markdown</a>
+            <a href="${API}/queries/${id}/export?format=pdf">PDF</a>
+          </div>
+          <table>
+            <thead><tr><th>Date</th><th>Condition</th><th class="num">High ${u}</th><th class="num">Low ${u}</th><th class="num">Precip</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+
+      function fmt(x) { return x === null || x === undefined ? "–" : Math.round(x * 10) / 10; }
+      const WMO = {0:"Clear",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Rime fog",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",71:"Light snow",73:"Snow",75:"Heavy snow",80:"Showers",81:"Showers",82:"Violent showers",95:"Thunderstorm",96:"Thunderstorm",99:"Thunderstorm"};
+      function codeLabel(c) { return WMO[c] || "—"; }
+
+      loadList();
+    </script>
+  </body>
+</html>
